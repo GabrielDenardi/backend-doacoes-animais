@@ -4,7 +4,9 @@ const cors = require('cors');
 const app = express();
 const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://gatosdoacoes.netlify.app'
+}));
 
 app.get('/total-donations', async (req, res) => {
     try {
