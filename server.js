@@ -10,11 +10,34 @@ app.use(cors({
 
 app.get('/total-donations', async (req, res) => {
     try {
-        const charges = await stripe.charges.list({ limit: 100 });
         let total = 0;
-        charges.data.forEach(charge => {
-            total += charge.amount;
-        });
+        let hasMore = true;
+        let startingAfter = null;
+
+        while (hasMore) {
+            const charges = await stripe.charges.list({
+                limit: 100,
+                starting_after: startingAfter,
+                expand: ['data.refunds']
+            });
+
+            charges.data.forEach(charge => {
+                if (charge.status === 'succeeded') {
+                    let amount = charge.amount;
+                    if (charge.amount_refunded > 0) {
+                        amount -= charge.amount_refunded;
+                    }
+                    total += amount;
+                }
+            });
+
+            if (charges.has_more) {
+                startingAfter = charges.data[charges.data.length - 1].id;
+            } else {
+                hasMore = false;
+            }
+        }
+
         res.json({ total: total / 100 });
     } catch (error) {
         console.error(error);
