@@ -15,11 +15,16 @@ app.get('/total-donations', async (req, res) => {
         let startingAfter = null;
 
         while (hasMore) {
-            const charges = await stripe.charges.list({
+            let params = {
                 limit: 100,
-                starting_after: startingAfter,
                 expand: ['data.refunds']
-            });
+            };
+
+            if (startingAfter) {
+                params.starting_after = startingAfter;
+            }
+
+            const charges = await stripe.charges.list(params);
 
             charges.data.forEach(charge => {
                 if (charge.status === 'succeeded') {
@@ -45,6 +50,7 @@ app.get('/total-donations', async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
